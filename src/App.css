@@ -35,3 +35,15 @@
 .section-title {
   margin-bottom: 1rem;
 }
+
+.tracker-search {
+  max-width: 22rem;
+}
+
+.app-table-sort {
+  cursor: pointer;
+}
+
+.app-table-bookmark {
+  width: 2.75rem;
+}
