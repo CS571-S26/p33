@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Form, Modal } from 'react-bootstrap'
+import { Alert, Button, Form, Modal } from 'react-bootstrap'
 import {
   APPLICATION_STATUSES,
   JOB_TYPES,
@@ -17,31 +17,57 @@ const emptyForm = {
 
 function AddApplicationModal({ show, onHide, onSave }) {
   const [form, setForm] = useState(emptyForm)
+  const [isSaving, setIsSaving] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.company.trim() || !form.role.trim() || !form.dateApplied) return
-    onSave(form)
-    setForm(emptyForm)
-    onHide()
+
+    setIsSaving(true)
+    setSubmitError('')
+
+    try {
+      const didSave = await onSave(form)
+      if (didSave) {
+        setForm(emptyForm)
+        onHide()
+      } else {
+        setSubmitError('Could not save this application. Please try again.')
+      }
+    } catch {
+      setSubmitError('Could not save this application. Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleClose = () => {
+    if (isSaving) return
     setForm(emptyForm)
+    setSubmitError('')
     onHide()
   }
 
   return (
-    <Modal show={show} onHide={handleClose} centered>
+    <Modal
+      show={show}
+      onHide={handleClose}
+      centered
+      backdrop={isSaving ? 'static' : true}
+      keyboard={!isSaving}
+    >
       <Modal.Header closeButton>
         <Modal.Title>Add application</Modal.Title>
       </Modal.Header>
       <Form onSubmit={handleSubmit}>
         <Modal.Body className="d-flex flex-column gap-3">
+          {submitError ? <Alert variant="danger">{submitError}</Alert> : null}
           <Form.Group controlId="add-company">
             <Form.Label>Company</Form.Label>
             <Form.Control
               required
+              disabled={isSaving}
               value={form.company}
               onChange={(e) =>
                 setForm((f) => ({ ...f, company: e.target.value }))
@@ -53,6 +79,7 @@ function AddApplicationModal({ show, onHide, onSave }) {
             <Form.Label>Role</Form.Label>
             <Form.Control
               required
+              disabled={isSaving}
               value={form.role}
               onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
               placeholder="e.g. Software Engineer Intern"
@@ -61,6 +88,7 @@ function AddApplicationModal({ show, onHide, onSave }) {
           <Form.Group controlId="add-type">
             <Form.Label>Job type</Form.Label>
             <Form.Select
+              disabled={isSaving}
               value={form.jobType}
               onChange={(e) =>
                 setForm((f) => ({ ...f, jobType: e.target.value }))
@@ -78,6 +106,7 @@ function AddApplicationModal({ show, onHide, onSave }) {
             <Form.Control
               required
               type="date"
+              disabled={isSaving}
               value={form.dateApplied}
               onChange={(e) =>
                 setForm((f) => ({ ...f, dateApplied: e.target.value }))
@@ -87,6 +116,7 @@ function AddApplicationModal({ show, onHide, onSave }) {
           <Form.Group controlId="add-status">
             <Form.Label>Status</Form.Label>
             <Form.Select
+              disabled={isSaving}
               value={form.status}
               onChange={(e) =>
                 setForm((f) => ({ ...f, status: e.target.value }))
@@ -104,20 +134,26 @@ function AddApplicationModal({ show, onHide, onSave }) {
             <Form.Control
               as="textarea"
               rows={3}
+              disabled={isSaving}
               value={form.notes}
               onChange={(e) =>
                 setForm((f) => ({ ...f, notes: e.target.value }))
               }
-              placeholder="Interview contacts, links, follow-ups…"
+              placeholder="Interview contacts, links, follow-ups..."
             />
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="outline-secondary" type="button" onClick={handleClose}>
+          <Button
+            variant="outline-secondary"
+            type="button"
+            onClick={handleClose}
+            disabled={isSaving}
+          >
             Cancel
           </Button>
-          <Button variant="primary" type="submit">
-            Save
+          <Button variant="primary" type="submit" disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save'}
           </Button>
         </Modal.Footer>
       </Form>

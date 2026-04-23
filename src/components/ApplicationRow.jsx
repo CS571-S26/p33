@@ -12,8 +12,11 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [rowError, setRowError] = useState('')
 
   const startEdit = () => {
+    setRowError('')
     setDraft({
       company: application.company,
       role: application.role,
@@ -26,118 +29,169 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
   }
 
   const cancelEdit = () => {
+    setRowError('')
     setDraft(null)
     setEditing(false)
   }
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!draft) return
-    onUpdate(application.id, {
-      company: draft.company.trim(),
-      role: draft.role.trim(),
-      jobType: draft.jobType,
-      dateApplied: draft.dateApplied,
-      status: draft.status,
-      notes: draft.notes.trim(),
-    })
-    cancelEdit()
+
+    if (!draft.company.trim() || !draft.role.trim() || !draft.dateApplied) {
+      setRowError('Company, role, and date applied are required.')
+      return
+    }
+
+    setIsSaving(true)
+    setRowError('')
+
+    try {
+      const didSave = await onUpdate(application.id, {
+        company: draft.company.trim(),
+        role: draft.role.trim(),
+        jobType: draft.jobType,
+        dateApplied: draft.dateApplied,
+        status: draft.status,
+        notes: draft.notes.trim(),
+      })
+
+      if (didSave) {
+        cancelEdit()
+      } else {
+        setRowError('Could not save your changes. Please try again.')
+      }
+    } catch {
+      setRowError('Could not save your changes. Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
-  const toggleBookmark = () => {
-    onUpdate(application.id, { bookmarked: !application.bookmarked })
+  const toggleBookmark = async () => {
+    setRowError('')
+    const didUpdate = await onUpdate(application.id, {
+      bookmarked: !application.bookmarked,
+    })
+    if (!didUpdate) {
+      setRowError('Could not update the bookmark right now.')
+    }
   }
 
   if (editing && draft) {
     return (
-      <tr>
-        <td>
-          <BookmarkButton
-            bookmarked={application.bookmarked}
-            onToggle={toggleBookmark}
-          />
-        </td>
-        <td>
-          <Form.Control
-            size="sm"
-            value={draft.company}
-            onChange={(e) =>
-              setDraft((d) => ({ ...d, company: e.target.value }))
-            }
-          />
-        </td>
-        <td>
-          <Form.Control
-            size="sm"
-            value={draft.role}
-            onChange={(e) => setDraft((d) => ({ ...d, role: e.target.value }))}
-          />
-        </td>
-        <td>
-          <Form.Select
-            size="sm"
-            value={draft.jobType}
-            onChange={(e) =>
-              setDraft((d) => ({ ...d, jobType: e.target.value }))
-            }
-          >
-            {JOB_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </Form.Select>
-        </td>
-        <td>
-          <Form.Control
-            size="sm"
-            type="date"
-            value={draft.dateApplied}
-            onChange={(e) =>
-              setDraft((d) => ({ ...d, dateApplied: e.target.value }))
-            }
-          />
-        </td>
-        <td>
-          <Form.Select
-            size="sm"
-            value={draft.status}
-            onChange={(e) =>
-              setDraft((d) => ({ ...d, status: e.target.value }))
-            }
-          >
-            {APPLICATION_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {formatStatusLabel(s)}
-              </option>
-            ))}
-          </Form.Select>
-        </td>
-        <td>
-          <Form.Control
-            as="textarea"
-            rows={2}
-            size="sm"
-            value={draft.notes}
-            onChange={(e) =>
-              setDraft((d) => ({ ...d, notes: e.target.value }))
-            }
-          />
-        </td>
-        <td className="text-nowrap text-end">
-          <Button
-            variant="success"
-            size="sm"
-            className="me-1"
-            type="button"
-            onClick={saveEdit}
-          >
-            Save
-          </Button>
-          <Button variant="outline-secondary" size="sm" type="button" onClick={cancelEdit}>
-            Cancel
-          </Button>
-        </td>
-      </tr>
+      <>
+        <tr>
+          <td>
+            <BookmarkButton
+              bookmarked={application.bookmarked}
+              onToggle={toggleBookmark}
+            />
+          </td>
+          <td>
+            <Form.Control
+              size="sm"
+              disabled={isSaving}
+              value={draft.company}
+              onChange={(e) =>
+                setDraft((d) => ({ ...d, company: e.target.value }))
+              }
+            />
+          </td>
+          <td>
+            <Form.Control
+              size="sm"
+              disabled={isSaving}
+              value={draft.role}
+              onChange={(e) =>
+                setDraft((d) => ({ ...d, role: e.target.value }))
+              }
+            />
+          </td>
+          <td>
+            <Form.Select
+              size="sm"
+              disabled={isSaving}
+              value={draft.jobType}
+              onChange={(e) =>
+                setDraft((d) => ({ ...d, jobType: e.target.value }))
+              }
+            >
+              {JOB_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </Form.Select>
+          </td>
+          <td>
+            <Form.Control
+              size="sm"
+              type="date"
+              disabled={isSaving}
+              value={draft.dateApplied}
+              onChange={(e) =>
+                setDraft((d) => ({ ...d, dateApplied: e.target.value }))
+              }
+            />
+          </td>
+          <td>
+            <Form.Select
+              size="sm"
+              disabled={isSaving}
+              value={draft.status}
+              onChange={(e) =>
+                setDraft((d) => ({ ...d, status: e.target.value }))
+              }
+            >
+              {APPLICATION_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {formatStatusLabel(s)}
+                </option>
+              ))}
+            </Form.Select>
+          </td>
+          <td>
+            <Form.Control
+              as="textarea"
+              rows={2}
+              size="sm"
+              disabled={isSaving}
+              value={draft.notes}
+              onChange={(e) =>
+                setDraft((d) => ({ ...d, notes: e.target.value }))
+              }
+            />
+          </td>
+          <td className="text-nowrap text-end">
+            <Button
+              variant="success"
+              size="sm"
+              className="me-1"
+              type="button"
+              onClick={saveEdit}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save'}
+            </Button>
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              type="button"
+              onClick={cancelEdit}
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+          </td>
+        </tr>
+        {rowError ? (
+          <tr className="app-table-error-row">
+            <td colSpan={8} className="small text-danger">
+              {rowError}
+            </td>
+          </tr>
+        ) : null}
+      </>
     )
   }
 
@@ -154,7 +208,7 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
         <td>
           <StatusBadge status={application.status} />
         </td>
-        <td className="small text-muted">{application.notes || '—'}</td>
+        <td className="small text-muted">{application.notes || '-'}</td>
         <td className="text-nowrap text-end">
           <Button
             variant="outline-primary"
@@ -162,6 +216,7 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
             className="me-1"
             type="button"
             onClick={startEdit}
+            disabled={isSaving}
           >
             Edit
           </Button>
@@ -170,30 +225,56 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
             size="sm"
             type="button"
             onClick={() => setConfirmDelete(true)}
+            disabled={isSaving}
           >
             Delete
           </Button>
         </td>
       </tr>
+      {rowError ? (
+        <tr className="app-table-error-row">
+          <td colSpan={8} className="small text-danger">
+            {rowError}
+          </td>
+        </tr>
+      ) : null}
       <Modal show={confirmDelete} onHide={() => setConfirmDelete(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Delete application?</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Remove <strong>{application.company}</strong> — {application.role} from your tracker?
+          Remove <strong>{application.company}</strong> - {application.role} from your tracker?
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="outline-secondary" onClick={() => setConfirmDelete(false)}>
+          <Button
+            variant="outline-secondary"
+            onClick={() => setConfirmDelete(false)}
+            disabled={isSaving}
+          >
             Cancel
           </Button>
           <Button
             variant="danger"
-            onClick={() => {
-              onDelete(application.id)
-              setConfirmDelete(false)
+            disabled={isSaving}
+            onClick={async () => {
+              setIsSaving(true)
+              setRowError('')
+
+              try {
+                const didDelete = await onDelete(application.id)
+                if (didDelete) {
+                  setConfirmDelete(false)
+                } else {
+                  setRowError('Could not delete this application right now.')
+                }
+              } catch {
+                setRowError('Could not delete this application right now.')
+              } finally {
+                setIsSaving(false)
+              }
             }}
           >
-            Delete
+            {isSaving ? 'Deleting...' : 'Delete'}
           </Button>
         </Modal.Footer>
       </Modal>

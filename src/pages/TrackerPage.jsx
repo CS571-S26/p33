@@ -1,9 +1,18 @@
-import { useCallback, useMemo, useState } from 'react'
-import { Button, Card, Col, Container, Row } from 'react-bootstrap'
+import { useCallback, useDeferredValue, useMemo, useState } from 'react'
+import {
+  Alert,
+  Button,
+  Card,
+  Col,
+  Container,
+  Row,
+  Spinner,
+} from 'react-bootstrap'
 import AddApplicationModal from '../components/AddApplicationModal'
 import ApplicationTable from '../components/ApplicationTable'
 import FilterBar from '../components/FilterBar'
 import PageHero from '../components/PageHero'
+import { useAuthContext } from '../context/authContext'
 import { useApplicationsContext } from '../context/applicationsContext'
 
 function TrackerPage() {
@@ -12,7 +21,14 @@ function TrackerPage() {
     addApplication,
     updateApplication,
     removeApplication,
+    error,
+    isLoading,
+    requiresSignIn,
+    storageMode,
   } = useApplicationsContext()
+  const { authConfigured, authError, authLoading, user, signInWithGoogle } =
+    useAuthContext()
+  const canManageApplications = !authConfigured || Boolean(user)
 
   const [modalOpen, setModalOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState('all')
@@ -21,6 +37,7 @@ function TrackerPage() {
   const [bookmarkedOnly, setBookmarkedOnly] = useState(false)
   const [sortKey, setSortKey] = useState('company')
   const [sortDir, setSortDir] = useState('asc')
+  const deferredSearchQuery = useDeferredValue(searchQuery)
 
   const handleSort = useCallback(
     (column) => {
@@ -38,30 +55,30 @@ function TrackerPage() {
     let list = applications
 
     if (statusFilter !== 'all') {
-      list = list.filter((a) => a.status === statusFilter)
+      list = list.filter((application) => application.status === statusFilter)
     }
     if (jobTypeFilter !== 'all') {
-      list = list.filter((a) => a.jobType === jobTypeFilter)
+      list = list.filter((application) => application.jobType === jobTypeFilter)
     }
     if (bookmarkedOnly) {
-      list = list.filter((a) => a.bookmarked)
+      list = list.filter((application) => application.bookmarked)
     }
 
-    const q = searchQuery.trim().toLowerCase()
-    if (q) {
+    const query = deferredSearchQuery.trim().toLowerCase()
+    if (query) {
       list = list.filter(
-        (a) =>
-          a.company.toLowerCase().includes(q) ||
-          a.role.toLowerCase().includes(q),
+        (application) =>
+          application.company.toLowerCase().includes(query) ||
+          application.role.toLowerCase().includes(query),
       )
     }
 
-    const mult = sortDir === 'asc' ? 1 : -1
+    const multiplier = sortDir === 'asc' ? 1 : -1
     return [...list].sort((a, b) => {
-      const av = a[sortKey] ?? ''
-      const bv = b[sortKey] ?? ''
-      if (av < bv) return -1 * mult
-      if (av > bv) return 1 * mult
+      const left = a[sortKey] ?? ''
+      const right = b[sortKey] ?? ''
+      if (left < right) return -1 * multiplier
+      if (left > right) return 1 * multiplier
       return 0
     })
   }, [
@@ -69,74 +86,130 @@ function TrackerPage() {
     statusFilter,
     jobTypeFilter,
     bookmarkedOnly,
-    searchQuery,
+    deferredSearchQuery,
     sortKey,
     sortDir,
   ])
 
+  let heroDescription =
+    'Filter, sort, bookmark, and edit your application list in one place.'
+
+  if (!authConfigured || storageMode === 'local') {
+    heroDescription =
+      'Firebase is not configured here yet, so the tracker is using local browser storage as a fallback.'
+  } else if (user) {
+    heroDescription = `Signed in as ${user.email || user.displayName || 'your Google account'}. Your tracker now syncs to Firestore.`
+  } else if (requiresSignIn) {
+    heroDescription =
+      'Sign in with Google to load and sync your application tracker from Firestore.'
+  }
+
   return (
     <Container className="page-section">
-      <PageHero
-        title="Application tracker"
-        description="Your list is saved in this browser for now. Filter, sort, star favorites, and edit rows in place. Hooking up Firebase is the next backend step."
-      >
-        <Button variant="primary" onClick={() => setModalOpen(true)}>
-          Add application
-        </Button>
+      <PageHero title="Application tracker" description={heroDescription}>
+        {authLoading && authConfigured ? (
+          <Button variant="outline-secondary" disabled>
+            Checking session...
+          </Button>
+        ) : requiresSignIn ? (
+          <Button variant="primary" onClick={signInWithGoogle}>
+            Sign in with Google
+          </Button>
+        ) : (
+          <Button variant="primary" onClick={() => setModalOpen(true)}>
+            Add application
+          </Button>
+        )}
       </PageHero>
 
-      <AddApplicationModal
-        show={modalOpen}
-        onHide={() => setModalOpen(false)}
-        onSave={addApplication}
-      />
+      {authError ? <Alert variant="danger">{authError}</Alert> : null}
+      {error ? <Alert variant="danger">{error}</Alert> : null}
 
-      <Row className="g-4">
-        <Col lg={9}>
-          <Card className="shadow-sm">
-            <Card.Body>
-              <Card.Title className="section-title mb-3">Applications</Card.Title>
-              <FilterBar
-                statusFilter={statusFilter}
-                jobTypeFilter={jobTypeFilter}
-                searchQuery={searchQuery}
-                bookmarkedOnly={bookmarkedOnly}
-                onStatusFilterChange={setStatusFilter}
-                onJobTypeFilterChange={setJobTypeFilter}
-                onSearchQueryChange={setSearchQuery}
-                onBookmarkedOnlyChange={setBookmarkedOnly}
-              />
-              {applications.length === 0 ? (
-                <p className="text-muted mb-0">
-                  No applications yet — add your first one!
-                </p>
-              ) : (
-                <ApplicationTable
-                  applications={filtered}
-                  sortKey={sortKey}
-                  sortDir={sortDir}
-                  onSort={handleSort}
-                  onUpdateRow={updateApplication}
-                  onDeleteRow={removeApplication}
-                />
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col lg={3}>
-          <Card className="info-card shadow-sm">
-            <Card.Body>
-              <Card.Title>Tips</Card.Title>
-              <Card.Text className="small">
-                Use the star column for roles you want to revisit. Combine filters
-                with search to narrow a long list. Firebase wiring lives in{' '}
-                <code>src/firebase/</code> when you are ready to sync to the cloud
-                (set <code>VITE_FIREBASE_*</code> keys locally; do not commit them).
+      {canManageApplications ? (
+        <AddApplicationModal
+          show={modalOpen}
+          onHide={() => setModalOpen(false)}
+          onSave={addApplication}
+        />
+      ) : null}
+
+      {requiresSignIn ? (
+        <Card className="info-card shadow-sm">
+          <Card.Body>
+            <Card.Title>Why sign in?</Card.Title>
+            <Card.Text className="small mb-2">
+              Google sign-in unlocks Firestore-backed storage so your tracker is
+              tied to your account instead of one browser session.
+            </Card.Text>
+            <Card.Text className="small text-muted mb-0">
+              After signing in, you can add, edit, bookmark, and delete rows just
+              like before, but the data will persist across reloads.
+            </Card.Text>
+          </Card.Body>
+        </Card>
+      ) : isLoading ? (
+        <Card className="shadow-sm loading-panel">
+          <Card.Body className="d-flex align-items-center gap-3">
+            <Spinner animation="border" role="status" />
+            <div>
+              <Card.Title className="mb-1">Loading applications</Card.Title>
+              <Card.Text className="text-muted mb-0">
+                Pulling the latest data for your tracker.
               </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+            </div>
+          </Card.Body>
+        </Card>
+      ) : (
+        <Row className="g-4">
+          <Col lg={9}>
+            <Card className="shadow-sm">
+              <Card.Body>
+                <Card.Title className="section-title mb-3">Applications</Card.Title>
+                <FilterBar
+                  statusFilter={statusFilter}
+                  jobTypeFilter={jobTypeFilter}
+                  searchQuery={searchQuery}
+                  bookmarkedOnly={bookmarkedOnly}
+                  onStatusFilterChange={setStatusFilter}
+                  onJobTypeFilterChange={setJobTypeFilter}
+                  onSearchQueryChange={setSearchQuery}
+                  onBookmarkedOnlyChange={setBookmarkedOnly}
+                />
+                {applications.length === 0 ? (
+                  <p className="text-muted mb-0">
+                    No applications yet - add your first one.
+                  </p>
+                ) : (
+                  <ApplicationTable
+                    applications={filtered}
+                    sortKey={sortKey}
+                    sortDir={sortDir}
+                    onSort={handleSort}
+                    onUpdateRow={updateApplication}
+                    onDeleteRow={removeApplication}
+                  />
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col lg={3}>
+            <Card className="info-card shadow-sm">
+              <Card.Body>
+                <Card.Title>Sync details</Card.Title>
+                <Card.Text className="small mb-2">
+                  {storageMode === 'cloud' && user
+                    ? `This tracker is currently syncing through Firestore for ${user.email || user.displayName || 'your Google account'}.`
+                    : 'This tracker is currently using local storage in the browser.'}
+                </Card.Text>
+                <Card.Text className="small text-muted mb-0">
+                  Use the star column for priority roles. Combine filters with
+                  search to narrow a longer list.
+                </Card.Text>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      )}
     </Container>
   )
 }

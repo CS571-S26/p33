@@ -47,3 +47,22 @@
 .app-table-bookmark {
   width: 2.75rem;
 }
+
+.navbar-auth {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.navbar-auth-text {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.loading-panel {
+  min-height: 8rem;
+}
+
+.app-table-error-row td {
+  background: transparent;
+  border-top: 0;
+}
