@@ -16,6 +16,11 @@ dist-ssr
 .env
 .env.*
 !.env.example
+!.env.production
+
+# Local Vite dev server artifacts
+.vite-dev*.log
+.vite-dev*.err
 
 # Editor directories and files
 .vscode/*
