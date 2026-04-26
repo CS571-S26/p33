@@ -1,3 +1,16 @@
+:root {
+  --app-bg: #f5f7fb;
+  --app-surface: #ffffff;
+  --app-surface-soft: #f8fafc;
+  --app-border: #dbe3ee;
+  --app-border-strong: #bfccdc;
+  --app-text: #18212f;
+  --app-muted: #4f5b6b;
+  --app-primary: #275dbe;
+  --app-primary-dark: #17468f;
+  --app-focus: #8bb8ff;
+}
+
 body {
   margin: 0;
   font-family:
@@ -7,8 +20,8 @@ body {
     BlinkMacSystemFont,
     'Segoe UI',
     sans-serif;
-  background-color: #f8f9fa;
-  color: #212529;
+  background: var(--app-bg);
+  color: var(--app-text);
 }
 
 #root {
@@ -16,9 +29,20 @@ body {
 }
 
 a {
+  color: var(--app-primary-dark);
   text-decoration: none;
+}
+
+a:hover {
+  color: var(--app-primary);
+  text-decoration: underline;
 }
 
 p {
   margin: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--app-focus);
+  outline-offset: 2px;
 }

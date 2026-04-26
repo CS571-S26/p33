@@ -7,8 +7,8 @@ function StatsBar() {
   const { stats, storageMode } = useApplicationsContext()
   const { authConfigured, authLoading, user } = useAuthContext()
 
-  let syncValue = 'Local only'
-  let syncDescription = 'This demo is saving application data in local storage.'
+  let syncValue = 'Local demo'
+  let syncDescription = 'This tracker is saving application data in local storage.'
 
   if (authConfigured && authLoading) {
     syncValue = 'Checking...'
@@ -16,9 +16,9 @@ function StatsBar() {
   } else if (authConfigured && user) {
     syncValue = 'Cloud sync'
     syncDescription = `Connected to Firestore as ${user.email || user.displayName || 'your Google account'}.`
-  } else if (authConfigured && storageMode === 'cloud') {
-    syncValue = 'Sign in'
-    syncDescription = 'Use Google sign-in to load and sync your tracker from Firestore.'
+  } else if (authConfigured && storageMode === 'local') {
+    syncValue = 'Local demo'
+    syncDescription = 'Sign in with Google when you want to sync through Firestore.'
   }
 
   return (

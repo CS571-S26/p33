@@ -1,16 +1,12 @@
-import { Badge } from 'react-bootstrap'
-
-const VARIANT_BY_STATUS = {
-  applied: 'primary',
-  interviewing: 'warning',
-  offer: 'success',
-  rejected: 'danger',
-  withdrawn: 'secondary',
-}
+import { formatStatusLabel } from '../constants/applications'
 
 function StatusBadge({ status }) {
-  const variant = VARIANT_BY_STATUS[status] ?? 'secondary'
-  return <Badge bg={variant}>{status}</Badge>
+  const safeStatus = status || 'applied'
+  return (
+    <span className={`status-badge status-badge--${safeStatus}`}>
+      {formatStatusLabel(safeStatus)}
+    </span>
+  )
 }
 
 export default StatusBadge

@@ -8,6 +8,7 @@ import {
   Row,
   Spinner,
 } from 'react-bootstrap'
+import { BsGoogle, BsPlusCircle } from 'react-icons/bs'
 import AddApplicationModal from '../components/AddApplicationModal'
 import ApplicationTable from '../components/ApplicationTable'
 import FilterBar from '../components/FilterBar'
@@ -28,7 +29,7 @@ function TrackerPage() {
   } = useApplicationsContext()
   const { authConfigured, authError, authLoading, user, signInWithGoogle } =
     useAuthContext()
-  const canManageApplications = !authConfigured || Boolean(user)
+  const canManageApplications = storageMode === 'local' || Boolean(user)
 
   const [modalOpen, setModalOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState('all')
@@ -94,14 +95,16 @@ function TrackerPage() {
   let heroDescription =
     'Filter, sort, bookmark, and edit your application list in one place.'
 
-  if (!authConfigured || storageMode === 'local') {
+  if (authConfigured && authLoading) {
     heroDescription =
-      'Firebase is not configured here yet, so the tracker is using local browser storage as a fallback.'
+      'Checking your Firebase session before loading tracker data.'
+  } else if (storageMode === 'local') {
+    heroDescription =
+      authConfigured
+        ? 'Use local demo storage right away, or sign in with Google from the navigation bar to sync through Firestore.'
+        : 'Firebase is not configured here yet, so the tracker is using local browser storage as a fallback.'
   } else if (user) {
     heroDescription = `Signed in as ${user.email || user.displayName || 'your Google account'}. Your tracker now syncs to Firestore.`
-  } else if (requiresSignIn) {
-    heroDescription =
-      'Sign in with Google to load and sync your application tracker from Firestore.'
   }
 
   return (
@@ -113,10 +116,12 @@ function TrackerPage() {
           </Button>
         ) : requiresSignIn ? (
           <Button variant="primary" onClick={signInWithGoogle}>
+            <BsGoogle aria-hidden className="me-1" />
             Sign in with Google
           </Button>
         ) : (
           <Button variant="primary" onClick={() => setModalOpen(true)}>
+            <BsPlusCircle aria-hidden className="me-1" />
             Add application
           </Button>
         )}
@@ -162,7 +167,7 @@ function TrackerPage() {
       ) : (
         <Row className="g-4">
           <Col lg={9}>
-            <Card className="shadow-sm">
+            <Card className="applications-card shadow-sm">
               <Card.Body>
                 <Card.Title className="section-title mb-3">Applications</Card.Title>
                 <FilterBar
@@ -199,7 +204,9 @@ function TrackerPage() {
                 <Card.Text className="small mb-2">
                   {storageMode === 'cloud' && user
                     ? `This tracker is currently syncing through Firestore for ${user.email || user.displayName || 'your Google account'}.`
-                    : 'This tracker is currently using local storage in the browser.'}
+                    : authConfigured
+                      ? 'This tracker is currently using local browser storage. Sign in from the navigation bar when you want cloud sync.'
+                      : 'This tracker is currently using local storage in the browser.'}
                 </Card.Text>
                 <Card.Text className="small text-muted mb-0">
                   Use the star column for priority roles. Combine filters with

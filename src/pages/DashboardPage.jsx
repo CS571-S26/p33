@@ -1,6 +1,8 @@
-import { Alert, Button, Container } from 'react-bootstrap'
+import { Alert, Col, Container, Row } from 'react-bootstrap'
 import PageHero from '../components/PageHero'
+import PriorityList from '../components/PriorityList'
 import StatsBar from '../components/StatsBar'
+import StatusSummary from '../components/StatusSummary'
 import { useAuthContext } from '../context/authContext'
 import { useApplicationsContext } from '../context/applicationsContext'
 
@@ -10,19 +12,20 @@ function DashboardPage() {
     authError,
     authLoading,
     user,
-    signInWithGoogle,
   } = useAuthContext()
   const { storageMode } = useApplicationsContext()
 
   let description =
     'Live stats from your application list: totals, response rate, and offers.'
 
-  if (!authConfigured || storageMode === 'local') {
+  if (authConfigured && authLoading) {
     description =
-      'This build can still run in local demo mode, but Firebase is ready when your VITE_FIREBASE_* keys are configured.'
-  } else if (authLoading) {
+      'Checking your Firebase session before loading tracker data.'
+  } else if (storageMode === 'local') {
     description =
-      'Checking your Firebase session before loading cloud-backed tracker data.'
+      authConfigured
+        ? 'Use the tracker in local demo mode now, or sign in with Google to sync your applications through Firestore.'
+        : 'This build is using local demo mode because Firebase keys are not configured.'
   } else if (user) {
     description = `Your tracker is syncing through Firestore for ${user.email || user.displayName || 'this Google account'}.`
   } else {
@@ -32,23 +35,17 @@ function DashboardPage() {
 
   return (
     <Container className="page-section">
-      <PageHero title="Dashboard" description={description}>
-        {!authConfigured ? (
-          <Button variant="outline-secondary" disabled>
-            Local demo mode
-          </Button>
-        ) : authLoading ? (
-          <Button variant="outline-secondary" disabled>
-            Checking session...
-          </Button>
-        ) : !user ? (
-          <Button variant="primary" onClick={signInWithGoogle}>
-            Sign in with Google
-          </Button>
-        ) : null}
-      </PageHero>
+      <PageHero title="Dashboard" description={description} />
       {authError ? <Alert variant="danger">{authError}</Alert> : null}
       <StatsBar />
+      <Row className="g-4 mt-1">
+        <Col lg={5}>
+          <StatusSummary />
+        </Col>
+        <Col lg={7}>
+          <PriorityList />
+        </Col>
+      </Row>
     </Container>
   )
 }

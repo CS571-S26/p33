@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Alert, Button, Form, Modal } from 'react-bootstrap'
+import { BsCheck2, BsX } from 'react-icons/bs'
 import {
   APPLICATION_STATUSES,
   JOB_TYPES,
@@ -58,7 +59,9 @@ function AddApplicationModal({ show, onHide, onSave }) {
       keyboard={!isSaving}
     >
       <Modal.Header closeButton>
-        <Modal.Title>Add application</Modal.Title>
+        <Modal.Title as="h2" className="h5">
+          Add application
+        </Modal.Title>
       </Modal.Header>
       <Form onSubmit={handleSubmit}>
         <Modal.Body className="d-flex flex-column gap-3">
@@ -150,9 +153,11 @@ function AddApplicationModal({ show, onHide, onSave }) {
             onClick={handleClose}
             disabled={isSaving}
           >
+            <BsX aria-hidden className="me-1" />
             Cancel
           </Button>
           <Button variant="primary" type="submit" disabled={isSaving}>
+            <BsCheck2 aria-hidden className="me-1" />
             {isSaving ? 'Saving...' : 'Save'}
           </Button>
         </Modal.Footer>

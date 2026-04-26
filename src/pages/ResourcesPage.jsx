@@ -19,18 +19,18 @@ const RESUME_LINKS = [
     href: 'https://old.gmu.edu/public/english/englishdepartment/careers/resume_guide/verbs.pdf',
   },
   {
-    label: 'Portfolio / GitHub polish',
+    label: 'Portfolio and GitHub polish',
     href: 'https://docs.github.com/en/get-started',
   },
 ]
 
 const INTERVIEW_LINKS = [
   {
-    label: 'Pramp — mock interviews',
+    label: 'Pramp - mock interviews',
     href: 'https://www.pramp.com/',
   },
   {
-    label: 'LeetCode — technical practice',
+    label: 'LeetCode - technical practice',
     href: 'https://leetcode.com/',
   },
   {
@@ -59,7 +59,7 @@ function ResourcesPage() {
     <Container className="page-section">
       <PageHero
         title="Resources"
-        description="Static job boards, resume tips, interview prep, and networking ideas — swap in your school's career center links anytime."
+        description="Static job boards, resume tips, interview prep, and networking ideas - swap in your school's career center links anytime."
       />
 
       <Row className="g-4 mb-4">

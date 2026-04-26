@@ -159,7 +159,8 @@ export function useApplications() {
 
     if (!user) {
       startTransition(() => {
-        setApplications([])
+        const stored = loadApplications()
+        setApplications(stored?.length ? stored : DEFAULT_APPLICATIONS)
         setLoadedUserId(null)
         setError('')
       })
@@ -205,7 +206,7 @@ export function useApplications() {
 
       setError('')
 
-      if (!FIREBASE_ENABLED) {
+      if (!FIREBASE_ENABLED || !user) {
         persistLocal((current) => [
           ...current,
           {
@@ -239,7 +240,7 @@ export function useApplications() {
 
       setError('')
 
-      if (!FIREBASE_ENABLED) {
+      if (!FIREBASE_ENABLED || !user) {
         persistLocal((current) =>
           current.map((application) =>
             application.id === id
@@ -271,7 +272,7 @@ export function useApplications() {
     (id) => {
       setError('')
 
-      if (!FIREBASE_ENABLED) {
+      if (!FIREBASE_ENABLED || !user) {
         persistLocal((current) => current.filter((a) => a.id !== id))
         return Promise.resolve(true)
       }
@@ -316,6 +317,7 @@ export function useApplications() {
 
   const isLoading =
     FIREBASE_ENABLED && (authLoading || Boolean(user && loadedUserId !== user.uid))
+  const storageMode = FIREBASE_ENABLED && user ? 'cloud' : 'local'
 
   return {
     applications: visibleApplications,
@@ -325,7 +327,7 @@ export function useApplications() {
     stats,
     error,
     isLoading,
-    storageMode: FIREBASE_ENABLED ? 'cloud' : 'local',
-    requiresSignIn: FIREBASE_ENABLED && !authLoading && !user,
+    storageMode,
+    requiresSignIn: false,
   }
 }

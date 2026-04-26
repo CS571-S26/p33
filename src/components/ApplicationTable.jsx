@@ -4,23 +4,20 @@ import ApplicationRow from './ApplicationRow'
 
 function SortHeader({ column, label, sortKey, sortDir, onSort }) {
   const active = sortKey === column
+
   return (
     <th
-      role="columnheader"
+      scope="col"
       aria-sort={
         active ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'
       }
-      className="user-select-none app-table-sort"
-      onClick={() => onSort(column)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onSort(column)
-        }
-      }}
-      tabIndex={0}
     >
-      <span className="d-inline-flex align-items-center gap-1">
+      <button
+        type="button"
+        className="sort-button"
+        onClick={() => onSort(column)}
+        aria-label={`Sort by ${label}`}
+      >
         {label}{' '}
         {active ? (
           sortDir === 'asc' ? (
@@ -29,7 +26,7 @@ function SortHeader({ column, label, sortKey, sortDir, onSort }) {
             <BsSortDown aria-hidden />
           )
         ) : null}
-      </span>
+      </button>
     </th>
   )
 }
@@ -45,7 +42,7 @@ function ApplicationTable({
   if (!applications.length) {
     return (
       <p className="text-muted mb-0">
-        No applications match these filters yet — add one or broaden your search.
+        No applications match these filters yet - add one or broaden your search.
       </p>
     )
   }
@@ -53,10 +50,11 @@ function ApplicationTable({
   return (
     <div className="table-responsive">
       <Table striped hover className="align-middle mb-0">
+        <caption className="visually-hidden">Application tracker table</caption>
         <thead>
           <tr>
             <th className="app-table-bookmark" scope="col">
-              {/* bookmark */}
+              <span className="visually-hidden">Bookmarked</span>
             </th>
             <SortHeader
               column="company"

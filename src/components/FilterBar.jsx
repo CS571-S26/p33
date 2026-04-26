@@ -18,12 +18,11 @@ function FilterBar({
 }) {
   return (
     <Row className="g-2 mb-3 align-items-end">
-      <Col sm={6} lg={3}>
+      <Form.Group as={Col} sm={6} lg={3} controlId="filter-status">
         <Form.Label className="small text-muted mb-1">Status</Form.Label>
         <Form.Select
           value={statusFilter}
           onChange={(e) => onStatusFilterChange(e.target.value)}
-          aria-label="Filter by status"
         >
           <option value="all">All statuses</option>
           {APPLICATION_STATUSES.map((s) => (
@@ -32,13 +31,12 @@ function FilterBar({
             </option>
           ))}
         </Form.Select>
-      </Col>
-      <Col sm={6} lg={3}>
+      </Form.Group>
+      <Form.Group as={Col} sm={6} lg={3} controlId="filter-job-type">
         <Form.Label className="small text-muted mb-1">Job type</Form.Label>
         <Form.Select
           value={jobTypeFilter}
           onChange={(e) => onJobTypeFilterChange(e.target.value)}
-          aria-label="Filter by job type"
         >
           <option value="all">All types</option>
           {JOB_TYPES.map((t) => (
@@ -47,22 +45,22 @@ function FilterBar({
             </option>
           ))}
         </Form.Select>
-      </Col>
-      <Col sm={12} lg={4}>
+      </Form.Group>
+      <Form.Group as={Col} sm={12} lg={4} controlId="filter-search">
         <Form.Label className="small text-muted mb-1">Search</Form.Label>
         <InputGroup>
-          <InputGroup.Text className="bg-white" id="filter-search-ico">
+          <InputGroup.Text className="bg-white" aria-hidden>
             <BsSearch aria-hidden />
           </InputGroup.Text>
           <Form.Control
             type="search"
             placeholder="Company or role"
-            aria-labelledby="filter-search-ico"
+            aria-label="Search by company or role"
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
           />
         </InputGroup>
-      </Col>
+      </Form.Group>
       <Col sm={12} lg={2}>
         <Form.Check
           type="switch"

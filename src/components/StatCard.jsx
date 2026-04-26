@@ -6,7 +6,7 @@ function StatCard({ title, value, description }) {
       <Card.Body>
         <Card.Title>{title}</Card.Title>
         {value != null && value !== '' ? (
-          <Card.Text className="display-6 fs-2 fw-semibold text-primary mb-2">
+          <Card.Text className="display-6 fs-2 stat-card-value mb-2">
             {value}
           </Card.Text>
         ) : null}

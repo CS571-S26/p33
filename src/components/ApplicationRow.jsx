@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Button, Form, Modal } from 'react-bootstrap'
+import { BsCheck2, BsPencil, BsTrash, BsX } from 'react-icons/bs'
 import {
   APPLICATION_STATUSES,
   JOB_TYPES,
@@ -85,12 +86,18 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
             <BookmarkButton
               bookmarked={application.bookmarked}
               onToggle={toggleBookmark}
+              ariaLabel={
+                application.bookmarked
+                  ? `Remove bookmark for ${application.company}`
+                  : `Bookmark ${application.company}`
+              }
             />
           </td>
           <td>
             <Form.Control
               size="sm"
               disabled={isSaving}
+              aria-label={`Company for ${application.company}`}
               value={draft.company}
               onChange={(e) =>
                 setDraft((d) => ({ ...d, company: e.target.value }))
@@ -101,6 +108,7 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
             <Form.Control
               size="sm"
               disabled={isSaving}
+              aria-label={`Role for ${application.company}`}
               value={draft.role}
               onChange={(e) =>
                 setDraft((d) => ({ ...d, role: e.target.value }))
@@ -111,6 +119,7 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
             <Form.Select
               size="sm"
               disabled={isSaving}
+              aria-label={`Job type for ${application.company}`}
               value={draft.jobType}
               onChange={(e) =>
                 setDraft((d) => ({ ...d, jobType: e.target.value }))
@@ -128,6 +137,7 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
               size="sm"
               type="date"
               disabled={isSaving}
+              aria-label={`Date applied for ${application.company}`}
               value={draft.dateApplied}
               onChange={(e) =>
                 setDraft((d) => ({ ...d, dateApplied: e.target.value }))
@@ -138,6 +148,7 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
             <Form.Select
               size="sm"
               disabled={isSaving}
+              aria-label={`Status for ${application.company}`}
               value={draft.status}
               onChange={(e) =>
                 setDraft((d) => ({ ...d, status: e.target.value }))
@@ -156,6 +167,7 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
               rows={2}
               size="sm"
               disabled={isSaving}
+              aria-label={`Notes for ${application.company}`}
               value={draft.notes}
               onChange={(e) =>
                 setDraft((d) => ({ ...d, notes: e.target.value }))
@@ -171,6 +183,7 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
               onClick={saveEdit}
               disabled={isSaving}
             >
+              <BsCheck2 aria-hidden className="me-1" />
               {isSaving ? 'Saving...' : 'Save'}
             </Button>
             <Button
@@ -180,6 +193,7 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
               onClick={cancelEdit}
               disabled={isSaving}
             >
+              <BsX aria-hidden className="me-1" />
               Cancel
             </Button>
           </td>
@@ -199,7 +213,15 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
     <>
       <tr>
         <td>
-          <BookmarkButton bookmarked={application.bookmarked} onToggle={toggleBookmark} />
+          <BookmarkButton
+            bookmarked={application.bookmarked}
+            onToggle={toggleBookmark}
+            ariaLabel={
+              application.bookmarked
+                ? `Remove bookmark for ${application.company}`
+                : `Bookmark ${application.company}`
+            }
+          />
         </td>
         <td>{application.company}</td>
         <td>{application.role}</td>
@@ -217,7 +239,9 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
             type="button"
             onClick={startEdit}
             disabled={isSaving}
+            aria-label={`Edit ${application.company} application`}
           >
+            <BsPencil aria-hidden className="me-1" />
             Edit
           </Button>
           <Button
@@ -226,7 +250,9 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
             type="button"
             onClick={() => setConfirmDelete(true)}
             disabled={isSaving}
+            aria-label={`Delete ${application.company} application`}
           >
+            <BsTrash aria-hidden className="me-1" />
             Delete
           </Button>
         </td>
@@ -240,7 +266,9 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
       ) : null}
       <Modal show={confirmDelete} onHide={() => setConfirmDelete(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Delete application?</Modal.Title>
+          <Modal.Title as="h2" className="h5">
+            Delete application?
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           Remove <strong>{application.company}</strong> - {application.role} from your tracker?
@@ -274,6 +302,7 @@ function ApplicationRow({ application, onUpdate, onDelete }) {
               }
             }}
           >
+            <BsTrash aria-hidden className="me-1" />
             {isSaving ? 'Deleting...' : 'Delete'}
           </Button>
         </Modal.Footer>
