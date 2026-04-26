@@ -19,5 +19,3 @@ A React + Vite job application tracker built for CS 571. The app uses React Boot
 4. Run `npm run dev`.
 
 If Firebase is not configured, the tracker still works locally using browser storage.
-
-note - top bar includes name kind of like a watermark
